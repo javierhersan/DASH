@@ -1,11 +1,12 @@
 # DASH
 
-DASH Client v1.0.0
+DASH Client v2.0.0
 
 What's new? 
 
-- Basic DASH Client functionalities.
+- Digital Rights Management (DRM)
 
 Main features:
 
 - Basic DASH Client functionalities.
+- Digital Rights Management (DRM)
