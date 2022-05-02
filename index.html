@@ -6,21 +6,100 @@
     <body>
 		<h1> IRAC Practica 3 - Grupo 27 </h1>
 
-        <div class="code">
+        <div class="player">
 			<video class="dashjs-player" autoplay controls preload="auto" muted>
 			</video>
 		</div>
-		<div class="code">
-			<p>Video Bitrate: <span id="bitrate"></span> kbps</p>
-			<p>Video Buffer: <span id="buffer"></span> seconds</p>
-			<p>Video Representation: <span id="representation"></span></p>
+		<div>
+			<div class="code">
+				<p>Video Bitrate: <span id="bitrate"></span> kbps</p>
+				<p>Video Buffer: <span id="buffer"></span> s</p>
+				<p>Video Representation: <span id="representation"></span></p>
+			</div>
+			<div class="chart">
+				<canvas id="chart" width="600" height="360">
+				</canvas>
+			</div>
 		</div>
 
 		<script src="http://cdn.dashjs.org/latest/dash.all.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 		<script>
+			var ctx = document.getElementById("chart").getContext("2d");
+			var chart = new Chart(ctx, {
+			type: 'bar',
+			data: {
+				labels: [actual_time()],
+				datasets: [
+					{
+						label: 'Datarate (kbps)',
+						yAxisID: 'A',
+						type: 'line',
+						borderColor: 'red',
+						backgroundColor: 'red',
+						data: [0],
+						fill: false
+					},
+					{
+						label: 'Buffer Level (s)',
+						yAxisID: 'B',
+						type: 'bar',
+						borderColor: 'blue',
+						backgroundColor: 'blue',
+						data: [0],
+						fill: false
+					}
+				]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				scales: {
+					yAxes: [
+						{
+							id: 'A',
+							type: 'linear',
+							position: 'left',
+							ticks: {
+								fontColor: 'dark',
+								fontSize: 15
+							},
+							scaleLabel: {
+								labelString: 'Datarate (kbps)'
+							}
+						},
+						{
+							id: 'B',
+							type: 'linear',
+							position: 'right',
+							ticks: {
+								fontColor: 'dark',
+								fontSize: 15
+							},
+							scaleLabel: {
+								labelString: 'Buffer Level (s)'
+							}
+						}
+					]
+				}
+			}
+			});
+
 			document.addEventListener("DOMContentLoaded", function () {
 				init();
 			});
+
+			function actual_time() {
+				var d = new Date();
+				return d.getHours() + ":" + (d.getMinutes()<10?'0':'') + d.getMinutes() + "," + (d.getSeconds()<10?'0':'') + d.getSeconds();
+			}
+
+			function addData(chart, label, new_buffer , new_bitrate) {
+				chart.data.labels.push(label);
+				chart.data.datasets[1].data.push(new_buffer);
+				chart.data.datasets[0].data.push(new_bitrate);
+				chart.update();
+			}
 
 			function init(){
 				const protData = {
@@ -53,8 +132,11 @@
 						var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
 						var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
 						var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to,periodIdx) / 1000) : NaN;
-						document.getElementById('buffer').innerText = bufferLevel + " secs";
-						document.getElementById('bitrate').innerText = bitrate + " Kbps";
+
+						addData(chart, actual_time(), bufferLevel, bitrate);
+
+						document.getElementById('buffer').innerText = bufferLevel;
+						document.getElementById('bitrate').innerText = bitrate;
 						document.getElementById('representation').innerText = repSwitch.to;
 					}
 				}, 500);
